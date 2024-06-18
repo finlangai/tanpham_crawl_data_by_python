@@ -1,5 +1,8 @@
-# selenium_scrape.py
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 from bs4 import BeautifulSoup
 import os
 import requests
@@ -15,12 +18,11 @@ def fetch_pdf_links(url):
     # In URL hiện tại để kiểm tra
     print('URL hiện tại:', driver.current_url)
 
-    # Chờ cho đến khi JavaScript được thực thi và nội dung được tải xong
-    driver.implicitly_wait(10)  # Thời gian chờ có thể điều chỉnh
+    # Chờ đợi cho đến khi tất cả các liên kết PDF xuất hiện, tối đa 10 giây
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR, "a[href$='.pdf']"))
+    )
     
-    # In nội dung HTML để kiểm tra
-    # print('Nội dung HTML:', driver.page_source)
-
     # Phân tích cú pháp HTML với BeautifulSoup ngay từ mã nguồn trang web
     soup = BeautifulSoup(driver.page_source, 'html.parser')
 
@@ -35,9 +37,10 @@ def fetch_pdf_links(url):
 
         # Tạo danh sách các URL PDF
     pdf_urls = [link['href'] for link in pdf_links]
+    print('danh sách PDF đã tạo:', len(pdf_urls))
 
     # Đóng trình duyệt
-    driver.quit()
+    # driver.quit()
 
     # Trả về danh sách các URL PDF
     return pdf_urls
@@ -67,6 +70,7 @@ if __name__ == "__main__":
     
     # Lấy các link PDF
     pdf_links = fetch_pdf_links(url)
-    
+    print('danh sách PDF đã trả về:', len(pdf_links))
+
     # Tải xuống các file PDF và lưu vào thư mục
     download_pdfs(pdf_links, download_folder)
